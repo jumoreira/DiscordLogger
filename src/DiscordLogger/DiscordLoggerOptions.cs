@@ -2,6 +2,7 @@ using DiscordLogger.Batching;
 using DiscordLogger.Filters;
 using DiscordLogger.Formatters;
 using DiscordLogger.Performance;
+using DiscordLogger.Resilience;
 
 namespace DiscordLogger;
 
@@ -85,4 +86,10 @@ public class DiscordLoggerOptions
     /// Tempo máximo de espera para graceful shutdown em segundos. Padrão: 5 segundos.
     /// </summary>
     public int GracefulShutdownTimeoutSeconds { get; set; } = 5;
+
+    /// <summary>
+    /// Opções de resiliência e confiabilidade (v1.4.0).
+    /// Inclui: Rate Limiting, Circuit Breaker, Backoff, Persistência (DLQ, File Fallback) e Múltiplos Webhooks.
+    /// </summary>
+    public ResilienceOptions Resilience { get; set; } = new();
 }

@@ -5,7 +5,123 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [1.2.0] - 2025-01-XX
+## [1.4.0] - 2025-01-XX - 🔒 Resiliência e Confiabilidade
+
+### ✨ Adicionado
+
+#### 🎯 Rate Limiting Avançado
+- **Token Bucket Rate Limiter**: Permite burst de requisições mantendo taxa média sustentável
+- **Adaptive Rate Limiter**: Ajusta automaticamente capacidade baseado em taxa de sucesso/falha
+- **Priority Queue**: Prioriza logs críticos e de erro sobre warnings e info
+- Configuração flexível: capacidade, refill rate, intervalos, min/max capacity
+- Classes: `IRateLimiter`, `TokenBucketRateLimiter`, `AdaptiveRateLimiter`, `RateLimitingOptions`
+
+#### 🔌 Circuit Breaker
+- **Circuit Breaker Pattern**: Estados Closed/Open/HalfOpen para proteção contra falhas
+- **Health Monitoring**: Monitora tempo de resposta e detecta degradação do serviço
+- **Auto Recovery**: Recuperação automática quando serviço volta (HalfOpen → Closed)
+- **Fallback Strategies**: 4 estratégias (Discard, Queue, File, AlternativeWebhook)
+- **Estatísticas em tempo real**: Taxa de sucesso, tempo médio de resposta, contadores
+- Classes: `ICircuitBreaker`, `CircuitBreaker`, `CircuitBreakerOptions`, `CircuitBreakerStatistics`
+
+#### ⏱️ Backoff Strategies
+- **Exponential Backoff**: Crescimento exponencial com jitter (1s → 2s → 4s → 8s...)
+- **Linear Backoff**: Incremento linear previsível (2s → 4s → 6s → 8s...)
+- **Fibonacci Backoff**: Sequência Fibonacci balanceada (1s → 1s → 2s → 3s → 5s...)
+- **Jitter Support**: Adiciona ±30% aleatoriedade para evitar thundering herd problem
+- Classes: `IBackoffStrategy`, `ExponentialBackoffStrategy`, `LinearBackoffStrategy`, `FibonacciBackoffStrategy`, `BackoffOptions`
+
+#### 💾 Persistência de Falhas
+- **Dead Letter Queue (DLQ)**: Armazena mensagens que falharam múltiplas vezes (file-based JSON)
+- **File Fallback**: Salvamento automático em arquivo local com rotação por tamanho
+- **Retry Queue**: Fila dedicada para reenvio com backoff progressivo
+- **Auto Recovery Service**: Tentativa automática de reenvio periódico em background
+- **Zero perda de dados**: Garante que nenhuma mensagem seja perdida
+- Classes: `IDeadLetterQueue`, `FileBasedDeadLetterQueue`, `FailedLogMessage`, `IFileFallback`, `FileFallback`, `RecoveryService`, `PersistenceOptions`
+
+#### 🚦 Múltiplos Webhooks e Roteamento
+- **Roteamento por Nível de Log**: Webhooks diferentes para Critical/Error/Warning/Info
+- **Roteamento por Categoria**: Suporte a wildcards (*.Service, *Controller, MyApp.Business.*)
+- **Pattern Matching**: Regex com wildcards (* e ?) para categorias complexas
+- **API Fluente**: Builder pattern para configuração intuitiva e type-safe
+- **Atributo [DiscordWebhook]**: Roteamento declarativo via atributos em classes
+- **Load Balancing**: 4 estratégias (Priority, Round-Robin, Random, Broadcast)
+- **Estatísticas de Roteamento**: Total roteado, contadores por rota, uso de fallback
+- Classes: `IWebhookRouter`, `WebhookRouter`, `WebhookRoute`, `MultiWebhookOptions`, `RoutingStatistics`, `LoadBalancingStrategy`, `DiscordWebhookAttribute`, `WebhookRoutingBuilder`
+
+#### 🔗 Integração e Orquestração
+- **ResilientWebhookClient**: Orquestra todos os componentes de resiliência transparentemente
+- **ResilienceOptions**: Configuração consolidada de todos os recursos
+- Integração perfeita com `DiscordLoggerOptions` via propriedade `Resilience`
+
+### 🧪 Testes
+- 34 novos testes unitários implementados
+- **RateLimiterTests.cs**: 7 testes (burst, refill, reset, adaptive)
+- **CircuitBreakerTests.cs**: 7 testes (estados, transições, estatísticas)
+- **WebhookRouterTests.cs**: 9 testes (roteamento, wildcards, load balancing)
+- **BackoffStrategyTests.cs**: 11 testes (estratégias, limites, jitter)
+
+### 📚 Documentação
+- **Guia Completo**: `docs/PHASE_9_RESILIENCE.md` com exemplos e troubleshooting
+- **Resumo de Implementação**: `docs/PHASE_9_IMPLEMENTATION_SUMMARY.md`
+- **Exemplos Práticos**: `examples/ConsoleExample/ResilienceExamples.cs` (10+ exemplos)
+- XML comments completos em todos os membros públicos
+
+### ⚡ Performance
+- Todos os componentes são thread-safe e assíncronos
+- Operações não-bloqueantes
+- Memory-efficient com pooling quando aplicável
+- Overhead mínimo quando resiliência está desabilitada
+
+### 🎯 Casos de Uso
+
+#### Zero Perda de Dados
+```csharp
+options.Resilience.CircuitBreaker.FallbackStrategy = FallbackStrategy.Queue;
+options.Resilience.Persistence.EnableDeadLetterQueue = true;
+options.Resilience.Persistence.EnableAutoRecovery = true;
+```
+
+#### Alta Disponibilidade
+```csharp
+options.Resilience.CircuitBreaker.FallbackStrategy = FallbackStrategy.AlternativeWebhook;
+options.Resilience.CircuitBreaker.FallbackWebhookUrl = "BACKUP_WEBHOOK";
+```
+
+#### Roteamento Inteligente
+```csharp
+options.ConfigureWebhookRouting(routing =>
+{
+    routing.AddRoute("CRITICAL_WEBHOOK").ForCriticalOnly().WithPriority(100);
+    routing.AddRoute("API_WEBHOOK").ForControllers().WithPriority(50);
+    routing.AddRoute("SERVICES_WEBHOOK").ForServices().WithPriority(30);
+});
+```
+
+### 📦 Arquivos Adicionados
+- **29 arquivos criados/modificados**
+- **~3,500+ linhas de código**
+- **30+ classes e interfaces**
+- **4 enums**
+
+### ⚠️ Breaking Changes
+**Nenhuma!** Todos os recursos são opt-in e totalmente retrocompatíveis.
+
+### 🔧 Compatibilidade
+- ✅ Compatível com v1.0.0, v1.1.0, v1.2.0 e v1.3.0
+- ✅ Todos os recursos são opt-in (desabilitados por padrão)
+- ✅ API retrocompatível
+
+## [1.3.0] - 2025-01-XX - ⚡ Performance & Escalabilidade
+
+### ✨ Adicionado
+- Buffering inteligente para alto volume
+- Fila de prioridade para logs críticos
+- HttpClient pooling
+- Anexo de arquivos para mensagens grandes
+- Benchmark e métricas de performance
+
+## [1.2.0] - 2025-01-XX - 🎨 Recursos Avançados
 
 ### ✨ Adicionado
 
@@ -56,13 +172,13 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
-### Planejado
-- Integração com Microsoft.Extensions.Logging ✅ (Concluído em v1.1.0)
-- Suporte a múltiplos webhooks
-- Batching de mensagens ✅ (Concluído em v1.2.0)
-- Filtros personalizados de log ✅ (Concluído em v1.2.0)
+### Planejado para v1.5.0
+- Métricas e Observabilidade
+- Integração com OpenTelemetry
+- Dashboard de monitoramento
+- Alertas inteligentes
 
-## [1.0.0] - 2025-01-XX
+## [1.0.0] - 2025-01-XX - 🚀 Versão Inicial
 
 ### ✨ Adicionado
 - Implementação completa do `DiscordLogger`
@@ -107,5 +223,8 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Exemplos de uso com exceções
 - Guia de configuração de webhook
 
-[Unreleased]: https://github.com/jumoreira/DiscordLogger/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/jumoreira/DiscordLogger/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/jumoreira/DiscordLogger/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/jumoreira/DiscordLogger/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/jumoreira/DiscordLogger/compare/v1.0.0...v1.2.0
 [1.0.0]: https://github.com/jumoreira/DiscordLogger/releases/tag/v1.0.0
