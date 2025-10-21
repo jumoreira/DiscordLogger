@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <!-- Versioning -->
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
+    
+    <!-- Code Analysis -->
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    
+    <!-- Language Settings -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- Package Settings -->
+    <Authors>Elefanti</Authors>
+    <Company>Elefanti</Company>
+    <Copyright>Copyright © Elefanti $([System.DateTime]::Now.Year)</Copyright>
+    <PackageProjectUrl>https://github.com/Elefanti/DiscordLogger</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Elefanti/DiscordLogger</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+</Project>
