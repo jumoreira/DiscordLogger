@@ -3,7 +3,7 @@ namespace DiscordLogger.Models;
 /// <summary>
 /// Representa uma mensagem do Discord webhook.
 /// </summary>
-internal class DiscordWebhookMessage
+public class DiscordWebhookMessage
 {
     /// <summary>
     /// Conteúdo texto da mensagem.
@@ -29,7 +29,7 @@ internal class DiscordWebhookMessage
 /// <summary>
 /// Representa um embed do Discord.
 /// </summary>
-internal class DiscordEmbed
+public class DiscordEmbed
 {
     /// <summary>
     /// Título do embed.
@@ -65,7 +65,7 @@ internal class DiscordEmbed
 /// <summary>
 /// Representa um campo de embed do Discord.
 /// </summary>
-internal class DiscordEmbedField
+public class DiscordEmbedField
 {
     /// <summary>
     /// Nome do campo.
@@ -86,7 +86,7 @@ internal class DiscordEmbedField
 /// <summary>
 /// Representa o footer de um embed do Discord.
 /// </summary>
-internal class DiscordEmbedFooter
+public class DiscordEmbedFooter
 {
     /// <summary>
     /// Texto do footer.

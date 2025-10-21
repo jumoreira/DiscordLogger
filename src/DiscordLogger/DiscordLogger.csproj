@@ -8,7 +8,7 @@
     
     <!-- NuGet Package Properties -->
     <PackageId>DiscordLogger</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.2.0</Version>
     <Description>Uma biblioteca de logging que encaminha logs para o Discord via Webhooks</Description>
     <PackageTags>discord;logging;logger;webhook;notification;dotnet;csharp</PackageTags>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

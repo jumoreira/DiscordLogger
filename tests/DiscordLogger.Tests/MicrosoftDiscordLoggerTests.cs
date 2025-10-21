@@ -10,26 +10,26 @@ public class MicrosoftDiscordLoggerTests
     {
         public List<(LogLevel Level, string Message, Exception? Exception)> LoggedMessages { get; } = new();
 
-        public Task LogAsync(LogLevel level, string message, Exception? exception = null, CancellationToken cancellationToken = default)
+        public Task LogAsync(LogLevel level, string message, Exception? exception = null, string? scopeInfo = null, CancellationToken cancellationToken = default)
         {
             LoggedMessages.Add((level, message, exception));
             return Task.CompletedTask;
         }
 
         public Task LogDebugAsync(string message, CancellationToken cancellationToken = default)
-            => LogAsync(LogLevel.Debug, message, null, cancellationToken);
+            => LogAsync(LogLevel.Debug, message, null, null, cancellationToken);
 
         public Task LogInformationAsync(string message, CancellationToken cancellationToken = default)
-            => LogAsync(LogLevel.Information, message, null, cancellationToken);
+            => LogAsync(LogLevel.Information, message, null, null, cancellationToken);
 
         public Task LogWarningAsync(string message, CancellationToken cancellationToken = default)
-            => LogAsync(LogLevel.Warning, message, null, cancellationToken);
+            => LogAsync(LogLevel.Warning, message, null, null, cancellationToken);
 
         public Task LogErrorAsync(string message, Exception? exception = null, CancellationToken cancellationToken = default)
-            => LogAsync(LogLevel.Error, message, exception, cancellationToken);
+            => LogAsync(LogLevel.Error, message, exception, null, cancellationToken);
 
         public Task LogCriticalAsync(string message, Exception? exception = null, CancellationToken cancellationToken = default)
-            => LogAsync(LogLevel.Critical, message, exception, cancellationToken);
+            => LogAsync(LogLevel.Critical, message, exception, null, cancellationToken);
     }
 
     [Fact]

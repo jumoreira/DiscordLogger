@@ -92,6 +92,6 @@ public class DiscordLoggerProviderTests
         var provider = new DiscordLoggerProvider(options);
 
         // Act & Assert - Should not throw
-        provider.SetScopeProvider(null);
+        provider.SetScopeProvider(null!);
     }
 }

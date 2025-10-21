@@ -11,8 +11,9 @@ public interface IDiscordLogger
     /// <param name="level">Nível do log.</param>
     /// <param name="message">Mensagem a ser registrada.</param>
     /// <param name="exception">Exceção associada ao log, se houver.</param>
+    /// <param name="scopeInfo">Informações de scope, se disponíveis.</param>
     /// <param name="cancellationToken">Token de cancelamento.</param>
-    Task LogAsync(LogLevel level, string message, Exception? exception = null, CancellationToken cancellationToken = default);
+    Task LogAsync(LogLevel level, string message, Exception? exception = null, string? scopeInfo = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Registra uma mensagem de debug no Discord.

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using DiscordLogger.Scopes;
+using DiscordLogger.Filters;
 
 namespace DiscordLogger;
 
@@ -11,7 +13,9 @@ public sealed class DiscordLoggerProvider : ILoggerProvider, ISupportExternalSco
 {
     private readonly IDiscordLogger _discordLogger;
     private readonly DiscordLoggerOptions _options;
-    private IExternalScopeProvider? _scopeProvider;
+    private readonly DiscordScopeProvider? _scopeProvider;
+    private readonly LogFilter? _filter;
+    private IExternalScopeProvider? _externalScopeProvider;
     private bool _disposed;
 
     /// <summary>
@@ -27,6 +31,18 @@ public sealed class DiscordLoggerProvider : ILoggerProvider, ISupportExternalSco
 
         _options = options.Value ?? throw new ArgumentNullException(nameof(options.Value));
         _discordLogger = new DiscordLogger(_options);
+
+        // Inicializa scope provider se habilitado
+        if (_options.EnableScopes)
+        {
+            _scopeProvider = new DiscordScopeProvider();
+        }
+
+        // Inicializa filtro se configurado
+        if (HasFiltersConfigured(_options.Filters))
+        {
+            _filter = new LogFilter(_options.Filters);
+        }
     }
 
     /// <summary>
@@ -37,6 +53,18 @@ public sealed class DiscordLoggerProvider : ILoggerProvider, ISupportExternalSco
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _discordLogger = new DiscordLogger(_options);
+
+        // Inicializa scope provider se habilitado
+        if (_options.EnableScopes)
+        {
+            _scopeProvider = new DiscordScopeProvider();
+        }
+
+        // Inicializa filtro se configurado
+        if (HasFiltersConfigured(_options.Filters))
+        {
+            _filter = new LogFilter(_options.Filters);
+        }
     }
 
     /// <inheritdoc />
@@ -47,13 +75,26 @@ public sealed class DiscordLoggerProvider : ILoggerProvider, ISupportExternalSco
             throw new ObjectDisposedException(nameof(DiscordLoggerProvider));
         }
 
-        return new MicrosoftDiscordLogger(categoryName, _discordLogger, _options);
+        return new MicrosoftDiscordLogger(categoryName, _discordLogger, _options, _scopeProvider, _filter);
     }
 
     /// <inheritdoc />
     public void SetScopeProvider(IExternalScopeProvider scopeProvider)
     {
-        _scopeProvider = scopeProvider;
+        _externalScopeProvider = scopeProvider;
+    }
+
+    /// <summary>
+    /// Verifica se há filtros configurados.
+    /// </summary>
+    private static bool HasFiltersConfigured(LogFilterOptions filters)
+    {
+        return filters.IncludeCategories.Count > 0 ||
+               filters.ExcludeCategories.Count > 0 ||
+               filters.IncludeEventIds.Count > 0 ||
+               filters.ExcludeEventIds.Count > 0 ||
+               filters.MessagePatterns.Count > 0 ||
+               filters.EnabledLevels.Count > 0;
     }
 
     /// <inheritdoc />
@@ -63,6 +104,8 @@ public sealed class DiscordLoggerProvider : ILoggerProvider, ISupportExternalSco
         {
             return;
         }
+
+        _scopeProvider?.Dispose();
 
         if (_discordLogger is IDisposable disposable)
         {

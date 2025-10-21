@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using DiscordLogger.Scopes;
+using DiscordLogger.Filters;
 using MsLogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 // Permite que o assembly de testes acesse classes internas
@@ -14,6 +16,8 @@ internal sealed class MicrosoftDiscordLogger : Microsoft.Extensions.Logging.ILog
     private readonly string _categoryName;
     private readonly IDiscordLogger _discordLogger;
     private readonly DiscordLoggerOptions _options;
+    private readonly DiscordScopeProvider? _scopeProvider;
+    private readonly LogFilter? _filter;
 
     /// <summary>
     /// Inicializa uma nova instância do MicrosoftDiscordLogger.
@@ -21,19 +25,31 @@ internal sealed class MicrosoftDiscordLogger : Microsoft.Extensions.Logging.ILog
     /// <param name="categoryName">Nome da categoria do logger.</param>
     /// <param name="discordLogger">Instância do IDiscordLogger.</param>
     /// <param name="options">Opções de configuração.</param>
-    public MicrosoftDiscordLogger(string categoryName, IDiscordLogger discordLogger, DiscordLoggerOptions options)
+    /// <param name="scopeProvider">Provider de scopes, se habilitado.</param>
+    /// <param name="filter">Filtro de logs, se configurado.</param>
+    public MicrosoftDiscordLogger(
+        string categoryName, 
+        IDiscordLogger discordLogger, 
+        DiscordLoggerOptions options,
+        DiscordScopeProvider? scopeProvider = null,
+        LogFilter? filter = null)
     {
         _categoryName = categoryName ?? throw new ArgumentNullException(nameof(categoryName));
         _discordLogger = discordLogger ?? throw new ArgumentNullException(nameof(discordLogger));
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        _scopeProvider = scopeProvider;
+        _filter = filter;
     }
 
     /// <inheritdoc />
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull
     {
-        // Discord logger não suporta scopes atualmente
-        // Retornar null é aceitável segundo a documentação
-        return null;
+        if (!_options.EnableScopes || _scopeProvider == null)
+        {
+            return null;
+        }
+
+        return _scopeProvider.Push(state);
     }
 
     /// <inheritdoc />
@@ -72,8 +88,22 @@ internal sealed class MicrosoftDiscordLogger : Microsoft.Extensions.Logging.ILog
             return;
         }
 
+        // Aplica filtros avançados
+        if (_filter != null && !_filter.ShouldLog(logLevel, eventId, _categoryName, message))
+        {
+            return;
+        }
+
         // Adiciona informações de categoria e eventId à mensagem
         var fullMessage = FormatMessage(_categoryName, eventId, message);
+        
+        // Adiciona informações de scope se habilitado
+        string? scopeInfo = null;
+        if (_options.EnableScopes && _scopeProvider != null)
+        {
+            scopeInfo = _scopeProvider.FormatScopes();
+        }
+
         var discordLogLevel = ConvertToDiscordLogLevel(logLevel);
 
         // Log assíncrono sem bloquear
@@ -82,7 +112,7 @@ internal sealed class MicrosoftDiscordLogger : Microsoft.Extensions.Logging.ILog
         {
             try
             {
-                await _discordLogger.LogAsync(discordLogLevel, fullMessage, exception);
+                await _discordLogger.LogAsync(discordLogLevel, fullMessage, exception, scopeInfo);
             }
             catch
             {

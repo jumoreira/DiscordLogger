@@ -1,4 +1,5 @@
 using DiscordLogger;
+using DiscordLogger.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -7,7 +8,8 @@ Console.WriteLine("=== DiscordLogger - Exemplo de Uso ===\n");
 Console.WriteLine("Escolha o modo de exemplo:");
 Console.WriteLine("1. IDiscordLogger (API direta)");
 Console.WriteLine("2. Microsoft.Extensions.Logging (ILogger<T>)");
-Console.Write("\nDigite 1 ou 2: ");
+Console.WriteLine("3. Recursos Avançados v1.2.0 (Scopes, Batching, Filtros)");
+Console.Write("\nDigite 1, 2 ou 3: ");
 
 var choice = Console.ReadLine();
 
@@ -47,6 +49,10 @@ if (choice == "1")
 else if (choice == "2")
 {
     await RunMicrosoftLoggingExample(options);
+}
+else if (choice == "3")
+{
+    await RunAdvancedFeaturesExample(options);
 }
 else
 {
@@ -183,6 +189,104 @@ static async Task RunMicrosoftLoggingExample(DiscordLoggerOptions options)
         await Task.Delay(1000);
 
         Console.WriteLine("\n✅ Todos os logs foram enviados com sucesso!");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"\n❌ Erro: {ex.Message}");
+    }
+    finally
+    {
+        await serviceProvider.DisposeAsync();
+    }
+}
+
+// ===== Exemplo 3: Recursos Avançados v1.2.0 =====
+static async Task RunAdvancedFeaturesExample(DiscordLoggerOptions baseOptions)
+{
+    Console.WriteLine("\n=== Exemplo 3: Recursos Avançados v1.2.0 ===\n");
+    
+    var services = new ServiceCollection();
+
+    services.AddLogging(builder =>
+    {
+        builder.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug);
+        builder.AddConsole();
+        
+        builder.AddDiscordLogger(options =>
+        {
+            options.WebhookUrl = baseOptions.WebhookUrl;
+            options.Username = "AdvancedBot v1.2.0";
+            options.AvatarUrl = baseOptions.AvatarUrl;
+            
+            // 1. Habilitar Scopes
+            options.EnableScopes = true;
+            
+            // 2. Configurar Batching
+            options.Batching.Enabled = true;
+            options.Batching.MaxBatchSize = 5;
+            options.Batching.FlushIntervalSeconds = 3;
+            
+            // 3. Configurar Filtros
+            options.Filters.ExcludeCategories.Add("System.*");
+            options.Filters.MessagePatterns.Add("Health check.*");
+            options.Filters.MessagePatternsAsWhitelist = false;
+            
+            // 4. Formatador Personalizado
+            options.MessageFormatter = new TemplateMessageFormatter(
+                titleTemplate: "🎯 [{level}] - {date}",
+                descriptionTemplate: "⏰ {time} | {message}"
+            );
+        });
+    });
+
+    var serviceProvider = services.BuildServiceProvider();
+
+    try
+    {
+        var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+        
+        // Exemplo 1: Scopes
+        Console.WriteLine("1. Testando Scopes...");
+        using (logger.BeginScope("RequestId: {RequestId}", Guid.NewGuid().ToString("N").Substring(0, 8)))
+        {
+            using (logger.BeginScope("UserId: {UserId}", "admin@example.com"))
+            {
+                logger.LogInformation("Processando requisição com contexto completo");
+            }
+        }
+        await Task.Delay(1000);
+        
+        // Exemplo 2: Batching
+        Console.WriteLine("2. Testando Batching (5 mensagens)...");
+        for (int i = 1; i <= 5; i++)
+        {
+            logger.LogInformation("Mensagem em batch #{Number}", i);
+        }
+        Console.WriteLine("   Aguardando flush do batch (3 segundos)...");
+        await Task.Delay(4000);
+        
+        // Exemplo 3: Filtros
+        Console.WriteLine("3. Testando Filtros...");
+        var systemLogger = serviceProvider.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("System.Internal");
+        systemLogger.LogInformation("Esta mensagem será filtrada (categoria System.*)");
+        
+        logger.LogInformation("Health check passed"); // Será filtrada pelo pattern
+        logger.LogInformation("Mensagem normal que será enviada");
+        await Task.Delay(1000);
+        
+        // Exemplo 4: Formatador Personalizado
+        Console.WriteLine("4. Testando Formatador Personalizado...");
+        logger.LogWarning("Aviso com formatação customizada");
+        logger.LogError(new Exception("Erro de teste"), "Erro com template personalizado");
+        await Task.Delay(4000); // Aguarda último batch
+        
+        Console.WriteLine("\n✅ Exemplos de recursos avançados concluídos!");
+        Console.WriteLine("\nRecursos demonstrados:");
+        Console.WriteLine("  ✓ Scopes com contexto");
+        Console.WriteLine("  ✓ Batching de mensagens");
+        Console.WriteLine("  ✓ Filtros avançados");
+        Console.WriteLine("  ✓ Formatador personalizado");
     }
     catch (Exception ex)
     {

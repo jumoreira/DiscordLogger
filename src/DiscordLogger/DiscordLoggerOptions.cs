@@ -1,3 +1,7 @@
+using DiscordLogger.Batching;
+using DiscordLogger.Filters;
+using DiscordLogger.Formatters;
+
 namespace DiscordLogger;
 
 /// <summary>
@@ -34,4 +38,24 @@ public class DiscordLoggerOptions
     /// Número máximo de tentativas em caso de falha. Padrão: 3.
     /// </summary>
     public int MaxRetryAttempts { get; set; } = 3;
+
+    /// <summary>
+    /// Habilita o suporte a scopes de log. Padrão: false.
+    /// </summary>
+    public bool EnableScopes { get; set; } = false;
+
+    /// <summary>
+    /// Opções de batching de mensagens.
+    /// </summary>
+    public BatchingOptions Batching { get; set; } = new();
+
+    /// <summary>
+    /// Opções de filtros avançados.
+    /// </summary>
+    public LogFilterOptions Filters { get; set; } = new();
+
+    /// <summary>
+    /// Formatador de mensagens personalizado. Se null, usa o formatador padrão.
+    /// </summary>
+    public IMessageFormatter? MessageFormatter { get; set; }
 }
