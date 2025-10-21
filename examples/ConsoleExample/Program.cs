@@ -1,5 +1,6 @@
 using DiscordLogger;
 using DiscordLogger.Formatters;
+using DiscordLogger.Performance;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,8 @@ Console.WriteLine("Escolha o modo de exemplo:");
 Console.WriteLine("1. IDiscordLogger (API direta)");
 Console.WriteLine("2. Microsoft.Extensions.Logging (ILogger<T>)");
 Console.WriteLine("3. Recursos Avançados v1.2.0 (Scopes, Batching, Filtros)");
-Console.Write("\nDigite 1, 2 ou 3: ");
+Console.WriteLine("4. Performance & Escalabilidade v1.3.0 (High Volume, Priority, Buffering)");
+Console.Write("\nDigite 1, 2, 3 ou 4: ");
 
 var choice = Console.ReadLine();
 
@@ -53,6 +55,10 @@ else if (choice == "2")
 else if (choice == "3")
 {
     await RunAdvancedFeaturesExample(options);
+}
+else if (choice == "4")
+{
+    await RunPerformanceDemo(options);
 }
 else
 {
@@ -287,6 +293,112 @@ static async Task RunAdvancedFeaturesExample(DiscordLoggerOptions baseOptions)
         Console.WriteLine("  ✓ Batching de mensagens");
         Console.WriteLine("  ✓ Filtros avançados");
         Console.WriteLine("  ✓ Formatador personalizado");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"\n❌ Erro: {ex.Message}");
+    }
+    finally
+    {
+        await serviceProvider.DisposeAsync();
+    }
+}
+
+// ===== Exemplo 4: Performance Demo v1.3.0 =====
+static async Task RunPerformanceDemo(DiscordLoggerOptions baseOptions)
+{
+    Console.WriteLine("\n=== Exemplo 4: Performance & Escalabilidade v1.3.0 ===\n");
+    
+    var services = new ServiceCollection();
+
+    services.AddLogging(builder =>
+    {
+        builder.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug);
+        builder.AddConsole();
+        
+        builder.AddDiscordLogger(options =>
+        {
+            options.WebhookUrl = baseOptions.WebhookUrl;
+            options.Username = "PerformanceBot v1.3.0";
+            options.AvatarUrl = baseOptions.AvatarUrl;
+            
+            // 1. Batching para alto volume
+            options.Batching.Enabled = true;
+            options.Batching.MaxBatchSize = 10;
+            options.Batching.FlushIntervalSeconds = 2;
+            options.Batching.MaxQueueSize = 1000;
+            
+            // 2. Buffering inteligente
+            options.Buffering.Enabled = true;
+            options.Buffering.BufferCapacity = 100;
+            options.Buffering.FlushStrategy = FlushStrategy.Auto;
+            options.Buffering.FlushThreshold = 20;
+            
+            // 3. Prioridade para logs críticos
+            options.EnablePriorityQueue = true;
+            
+            // 4. HttpClient pooling
+            options.EnableHttpClientPooling = true;
+            
+            // 5. Anexos para mensagens grandes
+            options.FileAttachment.Enabled = true;
+            options.FileAttachment.MessageThreshold = 500;
+        });
+    });
+
+    var serviceProvider = services.BuildServiceProvider();
+
+    try
+    {
+        var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+        
+        Console.WriteLine("1. Testando alto volume (100 mensagens)...");
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        
+        for (int i = 1; i <= 100; i++)
+        {
+            logger.LogInformation("Mensagem de alto volume #{Number}", i);
+            
+            if (i % 25 == 0)
+            {
+                Console.WriteLine($"   Progresso: {i}/100");
+            }
+        }
+        
+        stopwatch.Stop();
+        Console.WriteLine($"   ✅ 100 mensagens em {stopwatch.ElapsedMilliseconds}ms");
+        
+        await Task.Delay(3000);
+        
+        // Teste 2: Prioridades
+        Console.WriteLine("\n2. Testando fila de prioridade...");
+        logger.LogDebug("Prioridade baixa");
+        logger.LogInformation("Prioridade normal");
+        logger.LogWarning("Prioridade alta");
+        logger.LogError("Prioridade crítica");
+        
+        await Task.Delay(2000);
+        
+        // Teste 3: Mensagem grande
+        Console.WriteLine("\n3. Testando mensagem grande com anexo...");
+        var largeMessage = "Stack Trace:\n" + string.Join("\n", 
+            Enumerable.Range(1, 30).Select(i => 
+                $"   at MyApp.Service.Method{i}(String param) in File{i}.cs:line {i * 10}"));
+        
+        logger.LogError("Erro com stack trace grande:\n{StackTrace}", largeMessage);
+        
+        Console.WriteLine($"   Mensagem: {largeMessage.Length} caracteres");
+        Console.WriteLine("   Um preview será enviado com arquivo anexo");
+        
+        await Task.Delay(3000);
+        
+        Console.WriteLine("\n✅ Demonstração de Performance completa!");
+        Console.WriteLine("\nRecursos demonstrados:");
+        Console.WriteLine("  ✓ Alto volume com batching");
+        Console.WriteLine("  ✓ Buffering inteligente");
+        Console.WriteLine("  ✓ Fila de prioridade");
+        Console.WriteLine("  ✓ HttpClient pooling");
+        Console.WriteLine("  ✓ Anexo de arquivos");
     }
     catch (Exception ex)
     {

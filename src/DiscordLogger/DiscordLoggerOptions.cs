@@ -1,6 +1,7 @@
 using DiscordLogger.Batching;
 using DiscordLogger.Filters;
 using DiscordLogger.Formatters;
+using DiscordLogger.Performance;
 
 namespace DiscordLogger;
 
@@ -58,4 +59,30 @@ public class DiscordLoggerOptions
     /// Formatador de mensagens personalizado. Se null, usa o formatador padrão.
     /// </summary>
     public IMessageFormatter? MessageFormatter { get; set; }
+
+    /// <summary>
+    /// Opções de buffering inteligente para alto volume. Padrão: habilitado.
+    /// </summary>
+    public BufferingOptions Buffering { get; set; } = new();
+
+    /// <summary>
+    /// Habilita fila com prioridade para logs críticos. Padrão: false.
+    /// Se habilitado, logs críticos e de erro são processados primeiro.
+    /// </summary>
+    public bool EnablePriorityQueue { get; set; } = false;
+
+    /// <summary>
+    /// Opções de anexo de arquivos para mensagens grandes. Padrão: desabilitado.
+    /// </summary>
+    public FileAttachmentOptions FileAttachment { get; set; } = new();
+
+    /// <summary>
+    /// Habilita HttpClient pooling para melhor performance. Padrão: true.
+    /// </summary>
+    public bool EnableHttpClientPooling { get; set; } = true;
+
+    /// <summary>
+    /// Tempo máximo de espera para graceful shutdown em segundos. Padrão: 5 segundos.
+    /// </summary>
+    public int GracefulShutdownTimeoutSeconds { get; set; } = 5;
 }
