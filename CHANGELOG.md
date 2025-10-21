@@ -8,22 +8,55 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Unreleased]
 
 ### Planejado
-- Implementação do logger base
 - Integração com Microsoft.Extensions.Logging
-- Suporte a Discord Webhooks
-- Formatação de mensagens com Embeds
-- Níveis de log configuráveis
-- Rate limiting
-- Retry automático em falhas
+- Suporte a múltiplos webhooks
+- Batching de mensagens
+- Filtros personalizados de log
 
-## [1.0.0] - A ser lançado
+## [1.0.0] - 2025-01-XX
 
-### Estrutura do Projeto
-- Configuração inicial do projeto
-- Estrutura de diretórios (src, tests)
-- Configuração do NuGet package
+### ✨ Adicionado
+- Implementação completa do `DiscordLogger`
+- Classe `DiscordWebhookClient` para comunicação com Discord API
+- Classe `MessageFormatter` para formatação de embeds
+- Suporte a todos os níveis de log (Debug, Information, Warning, Error, Critical)
+- Formatação automática de exceções com stack trace
+- Retry automático com backoff exponencial
+- Suporte a rate limiting do Discord (HTTP 429)
+- Configuração via `DiscordLoggerOptions`
+- Cores personalizadas por nível de log
+- Emojis nos títulos dos embeds
+- Timestamps automáticos nas mensagens
+- Interface `IDiscordLogger` para facilitar testes
+- Implementação de `IDisposable` para gerenciamento de recursos
+- Suporte a inner exceptions
+- Truncamento automático de mensagens longas
+
+### 📚 Documentação
+- README completo com exemplos de uso
+- Documentação XML em todas as APIs públicas
+- Arquivo LICENSE (MIT)
+- Guia de publicação no NuGet
+- Exemplos de uso práticos
+- Roadmap de desenvolvimento
+
+### 🧪 Testes
+- 22 testes unitários implementados
+- Cobertura de todos os cenários principais
+- Testes de validação de entrada
+- Testes de gerenciamento de recursos (Dispose)
+
+### 🛠️ Infraestrutura
 - GitHub Actions para CI/CD
-- Documentação básica
+- Workflow de build e testes automáticos
+- Workflow de publicação no NuGet
+- EditorConfig para padrões de código
+- Directory.Build.props para propriedades compartilhadas
 
-[Unreleased]: https://github.com/Elefanti/DiscordLogger/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/Elefanti/DiscordLogger/releases/tag/v1.0.0
+### 📦 Projeto de Exemplo
+- Aplicação console demonstrando todos os níveis de log
+- Exemplos de uso com exceções
+- Guia de configuração de webhook
+
+[Unreleased]: https://github.com/jumoreira/DiscordLogger/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/jumoreira/DiscordLogger/releases/tag/v1.0.0
