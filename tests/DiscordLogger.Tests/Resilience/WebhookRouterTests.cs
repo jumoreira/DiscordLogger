@@ -78,7 +78,7 @@ public class WebhookRouterTests
                 new WebhookRoute
                 {
                     WebhookUrl = "https://discord.com/api/webhooks/services",
-                    CategoryPatterns = new HashSet<string> { "*.Service" }
+                    CategoryPatterns = new HashSet<string> { "*Service" } // Corrigido: removido o ponto antes de Service
                 }
             }
         };
