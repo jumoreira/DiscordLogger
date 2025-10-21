@@ -1,19 +1,36 @@
 using DiscordLogger;
+using Microsoft.Extensions.Configuration;
 
 Console.WriteLine("=== DiscordLogger - Exemplo de Uso ===\n");
 
-// Configurar as opções do logger
-var options = new DiscordLoggerOptions
+// Carregar configurações do arquivo appsettings.json
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .Build();
+
+// Configurar as opções do logger a partir do arquivo de configuração
+var options = new DiscordLoggerOptions();
+configuration.GetSection("DiscordLogger").Bind(options);
+
+// Validar se o webhook foi configurado
+if (string.IsNullOrEmpty(options.WebhookUrl) || 
+    options.WebhookUrl.Contains("YOUR_WEBHOOK") ||
+    options.WebhookUrl == "PASTE_YOUR_DISCORD_WEBHOOK_URL_HERE")
 {
-    // IMPORTANTE: Substitua pela sua URL de webhook do Discord
-    // Para criar um webhook: Configurações do Canal > Integrações > Webhooks > Novo Webhook
-    WebhookUrl = "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN",
-    
-    Username = "MyApp Logger",
-    MinimumLevel = LogLevel.Debug,
-    TimeoutSeconds = 30,
-    MaxRetryAttempts = 3
-};
+    Console.WriteLine("❌ Webhook do Discord não configurado!");
+    Console.WriteLine("\nPara configurar:");
+    Console.WriteLine("1. Abra o arquivo 'appsettings.json'");
+    Console.WriteLine("2. Substitua o valor de 'WebhookUrl' pela URL do seu webhook do Discord");
+    Console.WriteLine("\nPara criar um webhook no Discord:");
+    Console.WriteLine("1. Abra seu servidor no Discord");
+    Console.WriteLine("2. Vá em Configurações do Canal > Integrações > Webhooks");
+    Console.WriteLine("3. Clique em 'Novo Webhook'");
+    Console.WriteLine("4. Copie a URL do webhook");
+    Console.WriteLine("\nPressione qualquer tecla para sair...");
+    Console.ReadKey();
+    return;
+}
 
 // Criar o logger
 using var logger = new DiscordLogger.DiscordLogger(options);
@@ -73,12 +90,9 @@ try
 catch (ArgumentException ex)
 {
     Console.WriteLine($"\n❌ Erro de configuração: {ex.Message}");
-    Console.WriteLine("\nPor favor, configure um webhook válido do Discord:");
-    Console.WriteLine("1. Abra seu servidor no Discord");
-    Console.WriteLine("2. Vá em Configurações do Canal > Integrações > Webhooks");
-    Console.WriteLine("3. Clique em 'Novo Webhook'");
-    Console.WriteLine("4. Copie a URL do webhook");
-    Console.WriteLine("5. Substitua a URL no código");
+    Console.WriteLine("\nVerifique o arquivo 'appsettings.json' e certifique-se de que:");
+    Console.WriteLine("1. O webhook URL está correto");
+    Console.WriteLine("2. Todas as propriedades estão configuradas corretamente");
 }
 catch (Exception ex)
 {

@@ -1,0 +1,5 @@
+# Ignorar arquivo de configuração com credenciais
+appsettings.json
+
+# Manter o exemplo
+!appsettings.example.json
